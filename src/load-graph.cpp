@@ -126,7 +126,11 @@ void draw_background(LoadGraph *g) {
 			cairo_show_text (cr, caption.c_str());
 		} else {
 			// operation orders matters so it's 0 if i == num_bars
-			caption = g_strdup_printf("%d %%", 100 - i * (100 / num_bars));
+			guint max = 100;
+			if (g->type == LOAD_GRAPH_CPU) {
+				max = 100 * ProcData::get_instance()->config.num_cpus;
+			}
+			caption = g_strdup_printf("%d %%", max - i * (max / num_bars));
 			cairo_text_extents (cr, caption, &extents);
 			cairo_move_to (cr, g->indent - extents.width + 20, y);
 			cairo_show_text (cr, caption);
@@ -308,7 +312,11 @@ get_load (LoadGraph *g)
 		used  = NOW[i][CPU_USED]  - LAST[i][CPU_USED];
 
 		load = used / MAX(total, 1.0f);
-		g->data[0][i] = load;
+
+		g->data[0][i] = load / g->n;
+		if (i > 0) {
+			g->data[0][i] += g->data[0][i-1];
+		}
 
 		/* Update label */
 		text = g_strdup_printf("%.1f%%", load * 100.0f);
