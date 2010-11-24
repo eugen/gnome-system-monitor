@@ -128,7 +128,7 @@ void draw_background(LoadGraph *g) {
 			// operation orders matters so it's 0 if i == num_bars
 			guint max = 100;
 			if (g->type == LOAD_GRAPH_CPU) {
-				max = 100 * ProcData::get_instance()->config.num_cpus;
+				max = 100 * g->n;
 			}
 			caption = g_strdup_printf("%d %%", max - i * (max / num_bars));
 			cairo_text_extents (cr, caption, &extents);
@@ -213,7 +213,8 @@ load_graph_expose (GtkWidget *widget,
 	GtkAllocation allocation;
 	GdkWindow *window;
 
-	guint i, j;
+	guint i;
+	gint j;
 	gdouble sample_width, x_offset;
 
 	if (g->background == NULL) {
@@ -249,8 +250,14 @@ load_graph_expose (GtkWidget *widget,
 			 g->draw_width - g->rmargin - g->indent - 1, g->real_draw_height + FRAME_WIDTH - 1);
 	cairo_clip(cr);
 
-	for (j = 0; j < g->n; ++j) {
-		cairo_move_to (cr, x_offset, (1.0f - g->data[0][j]) * g->real_draw_height);
+	bool drawStacked = g->type == LOAD_GRAPH_CPU;
+	for (j = g->n-1; j >= 0; j--) {
+		if (drawStacked) {
+			cairo_move_to (cr, x_offset, g->real_draw_height);
+			cairo_rel_line_to (cr, x_offset, (1.0f - g->data[0][j]) * g->real_draw_height);
+		} else {
+	  		cairo_move_to (cr, x_offset, (1.0f - g->data[0][j]) * g->real_draw_height);
+		}
 		gdk_cairo_set_source_color (cr, &(g->colors [j]));
 
 		for (i = 1; i < LoadGraph::NUM_POINTS; ++i) {
@@ -264,7 +271,12 @@ load_graph_expose (GtkWidget *widget,
 				       x_offset - (i * g->graph_delx),
 				       (1.0f - g->data[i][j]) * g->real_draw_height + 3.5f);
 		}
-		cairo_stroke (cr);
+		if (drawStacked) {
+			cairo_rel_line_to (cr, x_offset - ((LoadGraph::NUM_POINTS - 1) * g->graph_delx), g->real_draw_height);
+			cairo_fill(cr);
+		} else {
+			cairo_stroke(cr);
+		}
 
 	}
 
