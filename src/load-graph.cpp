@@ -254,7 +254,6 @@ load_graph_expose (GtkWidget *widget,
 	for (j = g->n-1; j >= 0; j--) {
 		if (drawStacked) {
 			cairo_move_to (cr, x_offset, g->real_draw_height);
-			cairo_rel_line_to (cr, x_offset, (1.0f - g->data[0][j]) * g->real_draw_height);
 		} else {
 	  		cairo_move_to (cr, x_offset, (1.0f - g->data[0][j]) * g->real_draw_height);
 		}
@@ -272,7 +271,7 @@ load_graph_expose (GtkWidget *widget,
 				       (1.0f - g->data[i][j]) * g->real_draw_height + 3.5f);
 		}
 		if (drawStacked) {
-			cairo_rel_line_to (cr, x_offset - ((LoadGraph::NUM_POINTS - 1) * g->graph_delx), g->real_draw_height);
+			cairo_rel_line_to (cr, x_offset - ((LoadGraph::NUM_POINTS + 2.5) * g->graph_delx), g->real_draw_height);
 			cairo_fill(cr);
 		} else {
 			cairo_stroke(cr);
